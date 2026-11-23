@@ -1,0 +1,4 @@
+.DS_Store
+__pycache__/
+# local copy of the original explorer, which has the "best value" markers the site must not show
+reference/

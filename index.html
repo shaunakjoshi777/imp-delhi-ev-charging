@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EV Go Brrr · Charger siting in Delhi</title>
+<meta name="description" content="Three ways to site public charging stations for electric four-wheelers in Delhi (a policy grid rule, weighted K-means and the Maximal Covering Location Problem), run on the same demand estimate and shown side by side. IMP, FLAME University.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='8' cy='16' r='5' fill='%232f62c9'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23d9771f'/%3E%3Ccircle cx='24' cy='16' r='5' fill='%2323946b'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#explorer">Skip to the explorer</a>
+
+<header class="topbar pad">
+  <div class="wide">
+    <a class="brand" href="#top"><span class="brand-dots" aria-hidden="true"><i style="background:var(--grid)"></i><i style="background:var(--kmeans)"></i><i style="background:var(--mclp)"></i></span>EV Go Brrr</a>
+    <nav class="sections" aria-label="Sections">
+      <a href="#problem">Problem</a>
+      <a href="#demand">Study area &amp; demand</a>
+      <a href="#methods">Methods</a>
+      <a href="#explorer">Explorer</a>
+      <a href="#no-winner">No winner</a>
+      <a href="#data">Data &amp; limitations</a>
+      <a href="#references">References &amp; team</a>
+    </nav>
+    <button type="button" class="theme-btn" id="theme-btn" aria-pressed="false">Dark mode</button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- 1. Hero -->
+<section class="hero pad" aria-labelledby="title">
+  <div class="col">
+    <p class="kicker">Interdisciplinary Major Project · FLAME University</p>
+    <h1 id="title">Where should Delhi's public EV chargers go?</h1>
+    <p class="lede" style="margin-top:14px">A comparative analysis of algorithms to optimise EV charging station locations in NCT Delhi. We ran three siting methods on the same estimate of where public charging for electric four-wheelers is needed: the government's grid rule, weighted K-means clustering and the Maximal Covering Location Problem. This site shows what each one produces, side by side, and explains why we don't rank them.</p>
+    <ul class="method-chips" aria-label="The three methods">
+      <li><span class="swatch" style="background:var(--grid)"></span>Grid · policy rule</li>
+      <li><span class="swatch" style="background:var(--kmeans)"></span>Weighted K-means · machine learning</li>
+      <li><span class="swatch" style="background:var(--mclp)"></span>MCLP · optimisation</li>
+    </ul>
+    <div class="meta">
+      <span><b>Team EV Go Brrr:</b> Adit Jain, Charvi Kashyap, Harsh Maheshwary, Pranav Tewari Sreenivasan, Shaunak Joshi, Shreya Singh</span>
+      <span><b>Supervisor:</b> Prof. Hoshiar Mal</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. The problem -->
+<section class="block pad" id="problem" aria-labelledby="h-problem">
+  <div class="col">
+    <p class="kicker">The problem</p>
+    <h2 id="h-problem">More electric cars, and a city deciding where to plug them in</h2>
+    <p>The Delhi Electric Vehicles Policy 2020 set a target of 25% battery electric vehicles among all new registrations <span class="cite">(GNCTD Transport Department, n.d.)</span>. Charging is one of the main constraints: the Economic Survey of Delhi 2022–23 counted about 3,734 charging points at 2,610 locations, plus 234 battery-swapping stations, by the end of 2022, and the government's plan is to expand the network to 18,000 public charging points <span class="cite">(GNCTD Planning Department, 2022)</span>.</p>
+    <div class="facts" role="list">
+      <div class="fact" role="listitem"><b>68,322</b><span>electric cars registered at Delhi's 13 area RTOs (VAHAN, active vehicles registered 2020–2026)</span></div>
+      <div class="fact" role="listitem"><b>14,016</b><span>electric taxis registered at the citywide taxi unit (DL52)</span></div>
+      <div class="fact" role="listitem"><b>98</b><span>existing public chargers for four-wheelers inside the study area (our compiled data)</span></div>
+    </div>
+    <p>Placement matters as much as the count. The Ministry of Power guideline asks for at least one charging station in every 3 km × 3 km grid section <span class="cite">(Dash &amp; Anup, 2024)</span>, a target the Delhi policy also adopts <span class="cite">(GNCTD Transport Department, 2020)</span>, and the policy says two charging stations should be no more than 3 km apart <span class="cite">(Vansola et al., 2023)</span>. That spacing implies a worst-case trip of roughly 2.1 km to the nearest station, which is the coverage radius used throughout this site.</p>
+    <p>Several methods have been proposed for choosing sites, but they are usually tested one at a time, on different cities and different data. This project runs three of them on <em>one</em> Delhi dataset so their outputs can be put next to each other.</p>
+  </div>
+</section>
+
+<!-- 3. Study area and demand -->
+<section class="block pad" id="demand" aria-labelledby="h-demand">
+  <div class="wide demand-layout">
+    <div>
+      <p class="kicker">Study area and demand</p>
+      <h2 id="h-demand">One demand estimate, shared by all three methods</h2>
+      <p>The study area is Delhi's 250 Municipal Corporation (MCD) wards from the 2022 delimitation, 1,393 km² in all. The New Delhi Municipal Council (NDMC) area and Delhi Cantonment are not MCD wards, so they are outside the study area. Ward populations are Census 2011 counts, 16,419,787 people in total.</p>
+      <p>We cut the study area into 1,570 cells of 1 km × 1 km (cells on the boundary are clipped) and gave each cell a weight for how much public charging it is likely to need. The weights sum to 1,000, so a cell's weight is its share of the total in tenths of a percent.</p>
+      <table class="weights" aria-label="Components of the demand weight">
+        <thead><tr><th>Component</th><th style="text-align:right">Weight</th></tr></thead>
+        <tbody>
+          <tr><td><b>Where people live</b>: population, spread over mapped residential land within each ward</td><td class="w">60%</td></tr>
+          <tr><td><b>Daytime destinations</b></td><td class="w">40%</td></tr>
+          <tr class="sub"><td>Points of interest: offices, malls, hospitals, hotels, parking</td><td class="w">35%</td></tr>
+          <tr class="sub"><td>Commercial and industrial land</td><td class="w">30%</td></tr>
+          <tr class="sub"><td>Roads: arterial density, intersections, distance to arterials</td><td class="w">20%</td></tr>
+          <tr class="sub"><td>Transit: 194 metro stations and 59 bus terminals</td><td class="w">15%</td></tr>
+        </tbody>
+      </table>
+      <p class="formula" data-tex="w_c = 1000\cdot\frac{s_c}{\sum_{c'} s_{c'}},\qquad s_c = 0.6\,\frac{R_c}{\sum R} + 0.4\,\frac{D_c}{\sum D}">w_c = 1000 · s_c / Σs, where s_c = 0.6 · R_c/ΣR + 0.4 · D_c/ΣD</p>
+      <p class="small muted">R is the home side and D the destination side; within points of interest, offices and malls get 25% each, hospitals 20%, hotels and parking 15% each. These shares are the team's own reasoned starting values, not taken from the literature. Where a ward has almost no mapped residential land (33 of 250 wards), its population is spread by area instead.</p>
+    </div>
+    <figure class="plate" style="margin:0">
+      <div class="canvas-box"><canvas id="map-demand" role="img" aria-label="Map of estimated charging demand across Delhi's 250 MCD wards, in 1 km cells" aria-describedby="sum-demand"></canvas></div>
+      <figcaption class="legend">
+        <span>Estimated demand</span><span class="ramp" id="ramp-demand"></span><span>low → high</span>
+      </figcaption>
+      <p class="small muted" id="sum-demand" style="margin:0">Each square is a 1 km cell; darker cells carry more of the demand weight. The 10% of cells with the highest weight hold 36% of the total. The outline is the study area.</p>
+    </figure>
+  </div>
+</section>
+
+<!-- 4. The three methods -->
+<section class="block pad" id="methods" aria-labelledby="h-methods">
+  <div class="wide">
+    <div class="col" style="margin-left:0">
+      <p class="kicker">The three methods</p>
+      <h2 id="h-methods">Three methods, three different goals</h2>
+      <p>All three methods place stations on the same map, but each one is built to pursue a different goal. That difference matters for reading the results.</p>
+    </div>
+    <div class="cards" style="margin-top:20px">
+      <article class="card" style="--c:var(--grid)">
+        <span class="tag">Policy rule</span>
+        <h3><span class="swatch" style="background:var(--grid)"></span>Grid</h3>
+        <p>Lay a square grid over Delhi. Every cell where at least 1% of the land is commercial or industrial gets one station, at the cell's centre (or the centre of its largest part inside the study area). This is the Ministry of Power 3 km rule, applied with the ICCT method <span class="cite">(Dash &amp; Anup, 2024; Vansola et al., 2023)</span>.</p>
+        <h4>What it pursues</h4>
+        <p>Compliance with a spacing rule. It doesn't read the demand weights, and the number of stations follows from the rule rather than being chosen.</p>
+        <h4>Rule</h4>
+        <p class="formula" data-tex="\text{station in cell } g \iff \frac{\text{C/I land in } g}{\text{land in } g} \ge 1\%">station in cell g if C/I land share ≥ 1%</p>
+        <dl>
+          <dt>Cell size</dt><dd>1, 1.5, 2, 2.5, 3, 4, 5 km (3 km baseline)</dd>
+          <dt>Stations</dt><dd>404 at 1 km to 48 at 5 km; 104 at 3 km</dd>
+        </dl>
+      </article>
+      <article class="card" style="--c:var(--kmeans)">
+        <span class="tag">Machine learning</span>
+        <h3><span class="swatch" style="background:var(--kmeans)"></span>Weighted K-means</h3>
+        <p>Group the 1,570 demand points into <i>k</i> clusters and put a station at each cluster's demand-weighted centre. Heavily weighted cells pull stations towards them <span class="cite">(after Abdullahi et al., 2024)</span>.</p>
+        <h4>What it pursues</h4>
+        <p>Short distances on average: it minimises the demand-weighted squared distance from each cell to its nearest station.</p>
+        <h4>Objective</h4>
+        <p class="formula" data-tex="\min_{c_1,\dots,c_k}\ \sum_{i} w_i \,\min_{j}\ \lVert x_i - c_j \rVert^2">min Σ w_i · min_j ‖x_i − c_j‖²</p>
+        <dl>
+          <dt>Stations</dt><dd><i>k</i> from 48 to 404 (28 values)</dd>
+          <dt>Setup</dt><dd>k-means++ start, 10 restarts, fixed random seed</dd>
+        </dl>
+      </article>
+      <article class="card" style="--c:var(--mclp)">
+        <span class="tag">Optimisation</span>
+        <h3><span class="swatch" style="background:var(--mclp)"></span>MCLP</h3>
+        <p>The Maximal Covering Location Problem <span class="cite">(Church &amp; ReVelle, 1974; Frade et al., 2011)</span> chooses <i>p</i> sites from the 1,570 cell centres to maximise the demand within <i>R</i> = 2.1 km of a station. Once all demand is covered, a second stage places the remaining stations to maximise demand within 1 km.</p>
+        <h4>What it pursues</h4>
+        <p>Coverage: as much demand as possible within the radius, for a fixed number of stations.</p>
+        <h4>Formulation</h4>
+        <p class="formula" data-tex="\begin{aligned}\max\ & \textstyle\sum_i w_i\, y_i\\ \text{s.t. }\ & y_i \le \textstyle\sum_{j \in N_i} x_j \quad \forall i, \qquad N_i = \{\,j : d_{ij} \le R\,\}\\ & \textstyle\sum_j x_j = p\\ & x_j \in \{0,1\},\quad 0 \le y_i \le 1\end{aligned}">max Σ w_i y_i subject to y_i ≤ Σ_{j in N_i} x_j for all i; Σ x_j = p; x_j ∈ {0,1}; 0 ≤ y_i ≤ 1</p>
+        <dl>
+          <dt>Radius</dt><dd>2.1 km straight-line</dd>
+          <dt>Stations</dt><dd><i>p</i> from 48 to 404 (28 values)</dd>
+          <dt>Solver</dt><dd>HiGHS (via SciPy), 90 s limit per stage</dd>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- 5. The explorer -->
+<section class="block pad" id="explorer" aria-labelledby="h-explorer">
+  <div class="wide explorer">
+    <div class="col" style="margin-left:0">
+      <p class="kicker">The explorer</p>
+      <h2 id="h-explorer">Delhi Charger Siting Explorer</h2>
+      <p>Change the grid size or the number of stations and each map redraws, with coverage recomputed against the same demand estimate. By default K-means and MCLP use the same number of stations as the grid.</p>
+    </div>
+
+    <div class="controls" role="group" aria-label="Map options">
+      <span class="ctl-label" id="radius-label">Coverage radius</span>
+      <div class="seg" id="radius-seg" role="group" aria-labelledby="radius-label">
+        <button type="button" data-r="1500" aria-pressed="false">1.5 km</button>
+        <button type="button" data-r="2100" aria-pressed="true">2.1 km</button>
+        <button type="button" data-r="3000" aria-pressed="false">3 km</button>
+      </div>
+      <label class="check"><input type="checkbox" id="link-counts" checked> Same number of stations as the grid</label>
+      <label class="check"><input type="checkbox" id="show-rings"> Coverage rings</label>
+      <label class="check"><input type="checkbox" id="show-existing"> <span class="swatch" style="background:var(--existing)"></span> Existing 4W chargers (98)</label>
+      <label class="check"><input type="checkbox" id="show-consensus"> Consensus sites <span class="cons-count" id="cons-count"></span></label>
+    </div>
+
+    <div class="compare" role="region" aria-label="Figures for the three layouts shown" tabindex="0">
+      <table>
+        <thead><tr><th scope="col">Method</th><th scope="col">Stations</th><th scope="col" id="th-demand">Demand within 2.1 km</th><th scope="col" id="th-pop">Population within 2.1 km</th><th scope="col" id="th-area">Area within 2.1 km</th><th scope="col">Mean distance</th><th scope="col">Farthest cell</th></tr></thead>
+        <tbody id="compare-body" aria-live="polite"><tr><td colspan="7" class="loading">Loading layouts…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="plates">
+      <article class="plate" id="plate-grid" aria-labelledby="h-grid">
+        <div class="plate-head"><h3 id="h-grid"><span class="swatch" style="background:var(--grid)"></span>Grid</h3><span class="tag">Policy rule</span></div>
+        <p class="how">One station in every cell with at least 1% commercial or industrial land (Ministry of Power 3 km rule, ICCT method).</p>
+        <div class="slider-row"><label for="grid-size">Cell size</label><input type="range" id="grid-size" min="0" max="6" step="1" value="4"><output id="grid-out" for="grid-size">3 km</output></div>
+        <div class="canvas-box"><canvas id="map-grid" role="img" aria-label="Map of grid stations" aria-describedby="sum-grid"></canvas></div>
+        <div class="stats" id="stats-grid"></div>
+        <p class="sr-only" id="sum-grid" aria-live="polite"></p>
+      </article>
+      <article class="plate" id="plate-kmeans" aria-labelledby="h-kmeans">
+        <div class="plate-head"><h3 id="h-kmeans"><span class="swatch" style="background:var(--kmeans)"></span>Weighted K-means</h3><span class="tag">Machine learning</span></div>
+        <p class="how">Groups demand into k clusters and puts a station at each cluster's demand-weighted centre. Minimises average distance.</p>
+        <div class="slider-row"><label for="k-slider">Stations</label><input type="range" id="k-slider" min="0" max="1" step="1" value="0"><output id="k-out" for="k-slider">104</output></div>
+        <div class="canvas-box"><canvas id="map-kmeans" role="img" aria-label="Map of K-means stations" aria-describedby="sum-kmeans"></canvas></div>
+        <div class="stats" id="stats-kmeans"></div>
+        <p class="sr-only" id="sum-kmeans" aria-live="polite"></p>
+      </article>
+      <article class="plate" id="plate-mclp" aria-labelledby="h-mclp">
+        <div class="plate-head"><h3 id="h-mclp"><span class="swatch" style="background:var(--mclp)"></span>MCLP</h3><span class="tag">Optimisation</span></div>
+        <p class="how">Chooses p sites from the 1 km cell centres to maximise demand within 2.1 km. Once everything is covered, extra stations go closest to demand.</p>
+        <div class="slider-row"><label for="p-slider">Stations</label><input type="range" id="p-slider" min="0" max="1" step="1" value="0"><output id="p-out" for="p-slider">104</output></div>
+        <div class="canvas-box"><canvas id="map-mclp" role="img" aria-label="Map of MCLP stations" aria-describedby="sum-mclp"></canvas></div>
+        <div class="stats" id="stats-mclp"></div>
+        <p class="sr-only" id="sum-mclp" aria-live="polite"></p>
+      </article>
+    </div>
+
+    <div class="legend">
+      <span>Estimated demand <span class="ramp" id="ramp"></span> low → high</span>
+      <span><span class="swatch" style="background:var(--grid)"></span> grid</span>
+      <span><span class="swatch" style="background:var(--kmeans)"></span> K-means</span>
+      <span><span class="swatch" style="background:var(--mclp)"></span> MCLP</span>
+      <span><span class="x-key" aria-hidden="true">×</span> existing 4W charger</span>
+      <span><span class="ring-key" aria-hidden="true"></span> consensus site: all three methods have a station within 1 km, for the settings shown</span>
+    </div>
+
+    <div class="footnote">
+      <p>Demand: 1,570 one-km cells, weighted 60% by where people live (population, split by mapped residential land) and 40% by daytime destinations (offices, malls, hospitals, hotels, parking, commercial land, roads, metro and bus terminals). Weights sum to 1,000. Distances are straight-line in metres (UTM 43N); "mean distance" is weighted by demand, and "farthest cell" is the distance from the worst-served cell to its nearest station.</p>
+      <p>Grid stations come from the 1% rule at each cell size. K-means and MCLP layouts are pre-computed for each station count shown; when the counts are linked, they use the precomputed count closest to the grid's. MCLP chooses from the 1,570 cell centres, so its 104-station layout here differs from the report's baseline, which uses the 206 grid-cell centres. For 70–140 stations the MCLP solver stopped at its time limit, so those layouts are near-optimal rather than proven optimal. Study area excludes NDMC and Delhi Cantonment.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Why there's no winner -->
+<section class="block pad" id="no-winner" aria-labelledby="h-nowinner">
+  <div class="col">
+    <p class="kicker">Why there's no winner</p>
+    <h2 id="h-nowinner">We don't rank the methods, because every yardstick belongs to one of them</h2>
+    <p>We set out to compare the three methods and recommend one. Once the results were in, we concluded that an unbiased ranking isn't possible. Each method optimises a different objective, and every figure we could use to judge them is one of those objectives:</p>
+    <div class="trio">
+      <div style="--c:var(--grid)"><b>Grid</b>is built to satisfy a spacing rule on commercial and industrial land. Judged on compliance with that rule, it meets it by construction.</div>
+      <div style="--c:var(--kmeans)"><b>Weighted K-means</b>is built to keep stations close to demand on average. Judged on mean distance, it is scored on something very close to its own objective, which uses squared distance.</div>
+      <div style="--c:var(--mclp)"><b>MCLP</b>is built to cover as much demand as possible within the radius. Judged on demand within 2.1 km, it is aiming at that number directly.</div>
+    </div>
+    <p>So choosing the column to sort by is the same as choosing the method. Combining several columns into one score doesn't avoid this: the result then depends on the weights given to each column, which is the same choice made less visibly. The figures also move with our own assumptions, such as the 60/40 split in the demand estimate and the coverage radius: MCLP is solved for 2.1 km, so at 1.5 km or 3 km its layouts are measured against a radius they weren't solved for.</p>
+    <p class="pull">What the site does instead is show each method's output on the same demand estimate, report the same figures for all three, and let you change the settings. Which trade-off suits Delhi is a planning decision, and this is meant to inform it rather than make it.</p>
+    <p>The consensus sites in the explorer are one way to read the results without ranking them: places where both K-means and MCLP have a station within 1 km of a grid station, for the settings shown.</p>
+  </div>
+</section>
+
+<!-- 7. Data and limitations -->
+<section class="block pad" id="data" aria-labelledby="h-data">
+  <div class="col">
+    <p class="kicker">Data and limitations</p>
+    <h2 id="h-data">Where the data comes from, and what it can't tell us</h2>
+    <h3 style="margin:18px 0 8px">Sources</h3>
+    <ul class="plain">
+      <li><b>Ward boundaries and population:</b> the 2022 MCD ward delimitation (250 wards). Its population figures are Census 2011 counts. Source file: <span class="tbd">[TBD: source URL for the 2022 ward boundary file]</span></li>
+      <li><b>Land use, points of interest, roads and transit:</b> OpenStreetMap. We used OSM land use because the DDA Master Plan maps are published only as PDFs. Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL).</li>
+      <li><b>Existing chargers:</b> 1,404 points from SwitchDelhi (1,322) and OpenStreetMap (82), with duplicates within 30 m merged; 1,323 of them are inside the study area. A charger counts as a four-wheeler site if it matches, within 30 m, a SwitchDelhi listing whose vehicle type includes 4W. That leaves 98 four-wheeler chargers in the study area. OpenStreetMap points carry no vehicle type, so none of them count as four-wheeler sites.</li>
+      <li><b>EV registrations:</b> VAHAN (Ministry of Road Transport &amp; Highways), by RTO: active vehicles registered from 2020 to 2026, with 2026 a part year.</li>
+    </ul>
+    <h3 style="margin:18px 0 8px">Limitations</h3>
+    <ul class="plain">
+      <li><b>OSM land-use coverage in Delhi is patchy.</b> Missing residential, commercial or industrial polygons shift both the demand estimate and the grid rule, which depends on commercial and industrial land.</li>
+      <li><b>Charger data may undercount.</b> The 98 four-wheeler chargers are those we could identify; OpenStreetMap points have no vehicle type.</li>
+      <li><b>VAHAN registrations are available only by RTO, not by ward,</b> and the demand estimate doesn't use them directly. Electric cars in VAHAN also include hybrids, some of which never plug in.</li>
+      <li><b>Population is from Census 2011.</b> Delhi has grown since, unevenly across wards.</li>
+      <li><b>The destination weights are our own starting values,</b> not taken from the literature.</li>
+      <li><b>Distances are straight-line.</b> On 118 pairs of wards 1.5–5 km apart, the road distance was a median 1.42 times the straight-line distance, so 2.1 km straight-line is roughly 3 km by road.</li>
+      <li><b>There is no utilisation data,</b> so the demand estimate is a proxy for where charging is needed, not a measure of charging sessions.</li>
+      <li><b>MCLP layouts for 70–140 stations are near-optimal, not proven optimal:</b> the solver stopped at its 90-second limit. The other station counts were solved to proven optimality.</li>
+      <li><b>Land availability and grid capacity aren't modelled.</b> A site on the map is a location, not a confirmed plot with a power connection.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 8. References and team -->
+<section class="block pad" id="references" aria-labelledby="h-refs">
+  <div class="col">
+    <p class="kicker">References and team</p>
+    <h2 id="h-refs">References</h2>
+    <ol class="refs">
+      <li>Abdullahi, M. R., Lu, Q.-C., Hussain, A., Tripura, S., Xu, P.-C., &amp; Wang, S. (2024). Location optimization of EV charging stations: A custom K-means cluster algorithm approach. <i>Cleaner Engineering and Technology</i>. <a href="https://doi.org/10.1016/j.clet.2024.100833">doi:10.1016/j.clet.2024.100833</a></li>
+      <li>Church, R. L., &amp; ReVelle, C. (1974). The maximal covering location problem. <i>Papers of the Regional Science Association</i>, 32, 101–118. <a href="https://doi.org/10.1007/BF01942293">doi:10.1007/BF01942293</a></li>
+      <li>Dash, N., &amp; Anup, S. (2024). <i>India's public EV charging infrastructure readiness: A case study of Haryana state.</i> International Council on Clean Transportation. <a href="https://theicct.org/publication/indias-public-ev-charging-infrastructure-readiness-jan24/">theicct.org</a></li>
+      <li>Frade, I., Ribeiro, A., Gonçalves, G., &amp; Antunes, A. P. (2011). Optimal location of charging stations for electric vehicles in a neighborhood in Lisbon, Portugal. <i>Transportation Research Record</i>, 2252(1), 91–98. <a href="https://doi.org/10.3141/2252-12">doi:10.3141/2252-12</a></li>
+      <li>Government of NCT of Delhi, Transport Department. (2020). <i>Delhi Electric Vehicles Policy, 2020.</i> <a href="https://transport.delhi.gov.in/sites/default/files/transport_data/Delhi%20Electric%20Vehicles%20Policy,%202020.pdf">transport.delhi.gov.in</a></li>
+      <li>Government of NCT of Delhi, Department of Planning. (2022). Transport (Chapter 12). In <i>Delhi Economic Survey.</i> <a href="https://delhiplanning.delhi.gov.in/sites/default/files/Planning/ch._12_transport_0_0.pdf">delhiplanning.delhi.gov.in</a></li>
+      <li>Government of NCT of Delhi, Transport Department. (n.d.). <i>Delhi EV Policy.</i> <a href="https://transport.delhi.gov.in/transport/delhi-ev-policy">transport.delhi.gov.in</a></li>
+      <li>Vansola, B., Minal, &amp; Shukla, R. N. (2022). Set cover model-based optimum location of electric vehicle charging stations. <i>Current Science</i>, 123(12), 1448–1454. <a href="https://doi.org/10.18520/cs/v123/i12/1448-1454">doi:10.18520/cs/v123/i12/1448-1454</a></li>
+      <li>Vansola, B., Minal, &amp; Shukla, R. N. (2023). GIS-based model for optimum location of electric vehicle charging stations. In <i>Recent advances in transportation systems engineering and management</i> (Lecture Notes in Civil Engineering, Vol. 261, pp. 113–126). Springer. <a href="https://doi.org/10.1007/978-981-19-2273-2_8">doi:10.1007/978-981-19-2273-2_8</a></li>
+    </ol>
+    <p class="small muted">Data: Census of India 2011 (via the 2022 MCD ward delimitation); OpenStreetMap; SwitchDelhi; VAHAN, Ministry of Road Transport &amp; Highways. Software: Python (GeoPandas, Shapely, scikit-learn, SciPy with HiGHS); KaTeX for the formulas.</p>
+
+    <h2 style="margin-top:36px">Team</h2>
+    <p>EV Go Brrr, Interdisciplinary Major Project, FLAME University, Pune. Supervised by Prof. Hoshiar Mal.</p>
+    <ul class="team">
+      <li>Adit Jain</li>
+      <li>Charvi Kashyap</li>
+      <li>Harsh Maheshwary</li>
+      <li>Pranav Tewari Sreenivasan</li>
+      <li>Shaunak Joshi</li>
+      <li>Shreya Singh</li>
+    </ul>
+    <p class="small">Final report: <span class="tbd">[TBD: link to the final report]</span></p>
+  </div>
+</section>
+</main>
+
+<footer class="site pad">
+  <div class="wide">EV Go Brrr · A Comparative Analysis of Algorithms to Optimise EV Charging Station Locations in NCT Delhi · FLAME University, 2026.</div>
+</footer>
+
+<script src="assets/explorer.js"></script>
+</body>
+</html>

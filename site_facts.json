@@ -1,0 +1,28 @@
+{
+ "wards": 250,
+ "population_census2011": 16419787,
+ "study_area_km2": 1393.25,
+ "excluded_area_km2": 91.27,
+ "demand_cells": 1570,
+ "demand_pieces": 3259,
+ "demand_weight_sum": 1000.0,
+ "lambda": 0.6,
+ "chargers_total": 1404,
+ "chargers_by_source": {
+  "SwitchDelhi_Gov": 1322,
+  "OpenStreetMap": 82
+ },
+ "chargers_in_study_area": 1323,
+ "chargers_4w_flagged": 149,
+ "chargers_4w_in_study_area": 98,
+ "existing4w_in_explorer": 98,
+ "ev_cars_vahan": 68322,
+ "ev_taxis_vahan": 14016,
+ "ev_4w_vahan": 82338,
+ "transit_in_study_area": {
+  "metro": 194,
+  "bus_terminal": 59
+ },
+ "mclp_radius_m": 2100,
+ "mclp_tiebreak_m": 1000
+}
