@@ -1,10 +1,10 @@
-# EV Go Brrr: project website
+# Delhi EV Charger Siting: project website
 
 Static one-page site for *A Comparative Analysis of Algorithms to Optimise EV Charging Station Locations in NCT Delhi*
 (Interdisciplinary Major Project, FLAME University). It shows three siting methods (a policy grid rule, weighted
 K-means and MCLP) side by side on the same demand estimate, with the Delhi Charger Siting Explorer as its centrepiece.
 
-Live site: <https://shaunakjoshi777.github.io/ev-go-brrr/>
+Live site: <https://shaunakjoshi777.github.io/imp-delhi-ev-charging/>
 
 Plain HTML, CSS and JavaScript. No build step, no backend, no API keys.
 

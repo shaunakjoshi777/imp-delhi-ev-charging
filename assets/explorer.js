@@ -1,4 +1,4 @@
-/* EV Go Brrr site script.
+/* Delhi EV Charger Siting: site script.
    - theme toggle
    - KaTeX formulas (only if KaTeX loaded)
    - static demand map
