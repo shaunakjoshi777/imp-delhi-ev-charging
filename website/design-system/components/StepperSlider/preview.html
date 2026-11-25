@@ -1,0 +1,16 @@
+<!-- @dsCard group="Controls" height=120 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>StepperSlider</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&display=swap"></head>
+<body>
+<div class="dx-pad"><div class="dx-stepper">
+  <label for="n">Number of stations <output for="n" id="o">104</output></label>
+  <input id="n" type="range" min="0" max="4" step="1" value="0" aria-valuetext="104 stations">
+  <div class="dx-ticks" aria-hidden="true"><span>104</span><span>157</span><span>178</span><span>206</span><span>404</span></div>
+</div></div>
+<script>
+var v=[104,157,178,206,404],n=document.getElementById('n'),o=document.getElementById('o');
+n.addEventListener('input',function(){o.textContent=v[n.value];n.setAttribute('aria-valuetext',v[n.value]+' stations');});
+</script>
+</body>
+</html>

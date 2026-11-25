@@ -1,0 +1,18 @@
+<!-- @dsCard group="Data display" height=480 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>MethodCard</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&display=swap"></head>
+<body>
+<div class="dx-cards dx-pad">
+  <article class="dx-card grid"><h3>Grid (policy rule)</h3><p class="dx-q">Answers: which areas qualify under the rule?</p>
+    <ol><li>Cover the study area with 3 km squares (206 touch Delhi).</li><li>Measure the share of land mapped as commercial, retail or industrial.</li><li>Give a station to every square with at least 1%: 104 stations.</li><li>Place it at the square's centre, or the centre of its largest part inside Delhi.</li></ol>
+    <p class="dx-cite">Dash &amp; Anup (2024); Vansola et al. (2023)</p></article>
+  <article class="dx-card kmeans"><h3>Weighted K-means (machine learning)</h3><p class="dx-q">Answers: where are the centres of demand?</p>
+    <ol><li>Start with k centres spread out by k-means++.</li><li>Assign every demand square to its nearest centre.</li><li>Move each centre to the demand-weighted average of its squares.</li><li>Repeat until nothing moves; run 20 times and keep the lowest-error result.</li></ol>
+    <p class="dx-cite">After Abdullahi et al. (2024)</p></article>
+  <article class="dx-card mclp"><h3>MCLP (optimisation)</h3><p class="dx-q">Answers: which sites reach the most demand within a set distance?</p>
+    <ol><li>Take a candidate list: 206 points on the 3 km grid, or 1,570 square centres.</li><li>Pick exactly p sites so the most demand is within 2.1 km.</li><li>Break ties by demand within 1 km.</li><li>Solve with HiGHS through SciPy.</li></ol>
+    <p class="dx-cite">Church &amp; ReVelle (1974); Frade et al. (2011)</p></article>
+</div>
+</body>
+</html>

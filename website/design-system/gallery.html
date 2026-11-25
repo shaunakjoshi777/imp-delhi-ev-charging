@@ -1,0 +1,90 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delhi EV Charger Siting: component gallery</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components/bundle.css">
+<style>.g{border-bottom:1px solid var(--border);padding:var(--space-24)} .g>h2{margin:0} .wrap{max-width:var(--explorer-max);margin:0 auto}</style></head>
+<body><div class="wrap"><div class="dx-pad"><button class="dx-btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'">Switch theme</button></div>
+<section class="g"><h2 class="h3">Citation</h2><p class="dx-note">components/Citation/README.md</p><p class="dx-pad" style="margin:0;font-size:18px;line-height:29px;max-width:720px">Only about 55% of people who want an EV can charge at home <span class="dx-cite">(Kazam &amp; AEEE, 2026)</span>.</p>
+</section><section class="g"><h2 class="h3">LayerChip</h2><p class="dx-note">components/LayerChip/README.md</p><div class="dx-row dx-pad" role="group" aria-label="Method layers">
+  <button class="dx-chip" aria-pressed="true"><span class="dx-dot grid"></span>Grid<span class="dx-tick" aria-hidden="true">✓</span></button>
+  <button class="dx-chip" aria-pressed="true"><span class="dx-dot kmeans"></span>K-means<span class="dx-tick" aria-hidden="true">✓</span></button>
+  <button class="dx-chip" aria-pressed="false"><span class="dx-dot mclp"></span>MCLP<span class="dx-tick" aria-hidden="true">✓</span></button>
+</div>
+</section><section class="g"><h2 class="h3">MapLegend</h2><p class="dx-note">components/MapLegend/README.md</p><div class="dx-panel" style="margin:16px;display:grid;gap:12px;max-width:420px">
+  <div class="dx-row"><span class="dx-row" style="gap:6px"><span class="dx-dot grid"></span>Grid</span><span class="dx-row" style="gap:6px"><span class="dx-dot kmeans"></span>K-means</span><span class="dx-row" style="gap:6px"><span class="dx-dot mclp"></span>MCLP</span></div>
+  <div class="dx-row"><span class="dx-row" style="gap:6px"><span class="dx-x" aria-hidden="true">×</span>Existing four-wheeler charger</span><span class="dx-row" style="gap:6px"><span class="dx-ring" aria-hidden="true"></span>Shared site</span></div>
+  <div><div style="display:flex;height:12px"><span style="flex:1;background:var(--demand-1)"></span><span style="flex:1;background:var(--demand-2)"></span><span style="flex:1;background:var(--demand-3)"></span><span style="flex:1;background:var(--demand-4)"></span><span style="flex:1;background:var(--demand-5)"></span></div>
+  <div class="dx-ticks"><span>Lower estimated demand</span><span>Higher</span></div></div>
+</div>
+</section><section class="g"><h2 class="h3">MapTooltip</h2><p class="dx-note">components/MapTooltip/README.md</p><div class="dx-row dx-pad" style="align-items:flex-start">
+  <div class="dx-tip" role="tooltip"><dl><dt>Method</dt><dd><span class="dx-row" style="gap:6px"><span class="dx-dot grid"></span>Grid</span></dd><dt>Site ID</dt><dd><span class="dx-tbd">[TBD]</span></dd><dt>Area</dt><dd><span class="dx-tbd">[TBD]</span></dd><dt>Shared</dt><dd>Yes</dd></dl></div>
+  <div class="dx-tip" role="tooltip"><dl><dt>Demand weight</dt><dd><span class="dx-tbd">[TBD]</span></dd><dt>Population</dt><dd><span class="dx-tbd">[TBD]</span></dd></dl></div>
+</div>
+</section><section class="g"><h2 class="h3">MethodCard</h2><p class="dx-note">components/MethodCard/README.md</p><div class="dx-cards dx-pad">
+  <article class="dx-card grid"><h3>Grid (policy rule)</h3><p class="dx-q">Answers: which areas qualify under the rule?</p>
+    <ol><li>Cover the study area with 3 km squares (206 touch Delhi).</li><li>Measure the share of land mapped as commercial, retail or industrial.</li><li>Give a station to every square with at least 1%: 104 stations.</li><li>Place it at the square's centre, or the centre of its largest part inside Delhi.</li></ol>
+    <p class="dx-cite">Dash &amp; Anup (2024); Vansola et al. (2023)</p></article>
+  <article class="dx-card kmeans"><h3>Weighted K-means (machine learning)</h3><p class="dx-q">Answers: where are the centres of demand?</p>
+    <ol><li>Start with k centres spread out by k-means++.</li><li>Assign every demand square to its nearest centre.</li><li>Move each centre to the demand-weighted average of its squares.</li><li>Repeat until nothing moves; run 20 times and keep the lowest-error result.</li></ol>
+    <p class="dx-cite">After Abdullahi et al. (2024)</p></article>
+  <article class="dx-card mclp"><h3>MCLP (optimisation)</h3><p class="dx-q">Answers: which sites reach the most demand within a set distance?</p>
+    <ol><li>Take a candidate list: 206 points on the 3 km grid, or 1,570 square centres.</li><li>Pick exactly p sites so the most demand is within 2.1 km.</li><li>Break ties by demand within 1 km.</li><li>Solve with HiGHS through SciPy.</li></ol>
+    <p class="dx-cite">Church &amp; ReVelle (1974); Frade et al. (2011)</p></article>
+</div>
+</section><section class="g"><h2 class="h3">SegmentedControl</h2><p class="dx-note">components/SegmentedControl/README.md</p><div class="dx-col dx-pad">
+  <div class="dx-seg" role="radiogroup" aria-label="Scenario">
+    <button role="radio" aria-checked="true">A: new network</button>
+    <button role="radio" aria-checked="false">B: build on today's 98 chargers</button>
+  </div>
+  <div class="dx-seg" role="radiogroup" aria-label="View">
+    <button role="radio" aria-checked="true">One map</button>
+    <button role="radio" aria-checked="false">Side by side</button>
+    <button role="radio" aria-checked="false">Shared sites</button>
+  </div>
+  <div class="dx-seg" role="radiogroup" aria-label="Grid square size">
+    <button role="radio" aria-checked="true">3 km</button>
+    <button role="radio" aria-checked="false">2 km</button>
+    <button role="radio" aria-checked="false" disabled title="Not in the data for this scenario">1 km</button>
+  </div>
+</div>
+</section><section class="g"><h2 class="h3">SharedBadge</h2><p class="dx-note">components/SharedBadge/README.md</p><div class="dx-row dx-pad"><span class="dx-shared"><span class="dx-ring" aria-hidden="true"></span>Shared</span></div>
+</section><section class="g"><h2 class="h3">SiteListTable</h2><p class="dx-note">components/SiteListTable/README.md</p><div class="dx-col dx-pad">
+  <div class="dx-row"><input class="dx-search" type="search" placeholder="Search site ID or area" aria-label="Search sites"><button class="dx-btn">Download CSV</button><span class="dx-note">Placeholder data</span></div>
+  <div class="dx-table-wrap"><table class="dx-table">
+    <thead><tr><th scope="col">Site ID</th><th scope="col">Ward or area</th><th scope="col">Latitude</th><th scope="col">Longitude</th><th scope="col">Shared</th></tr></thead>
+    <tbody>
+      <tr><td><span class="dx-tbd">[TBD: ID]</span></td><td><span class="dx-tbd">[TBD: area]</span></td><td><span class="dx-tbd">[TBD]</span></td><td><span class="dx-tbd">[TBD]</span></td><td>Yes</td></tr>
+      <tr><td><span class="dx-tbd">[TBD: ID]</span></td><td><span class="dx-tbd">[TBD: area]</span></td><td><span class="dx-tbd">[TBD]</span></td><td><span class="dx-tbd">[TBD]</span></td><td>No</td></tr>
+      <tr><td><span class="dx-tbd">[TBD: ID]</span></td><td><span class="dx-tbd">[TBD: area]</span></td><td><span class="dx-tbd">[TBD]</span></td><td><span class="dx-tbd">[TBD]</span></td><td>No</td></tr>
+      <tr><td><span class="dx-tbd">[TBD: ID]</span></td><td><span class="dx-tbd">[TBD: area]</span></td><td><span class="dx-tbd">[TBD]</span></td><td><span class="dx-tbd">[TBD]</span></td><td>Yes</td></tr>
+    </tbody></table></div>
+</div>
+</section><section class="g"><h2 class="h3">StatBlock</h2><p class="dx-note">components/StatBlock/README.md</p><div class="dx-stats dx-pad">
+  <div class="dx-stat"><span class="dx-stat-fig">68,322</span><span class="dx-stat-cap">electric cars, VAHAN, registered 2020 to 2026</span></div>
+  <div class="dx-stat"><span class="dx-stat-fig">14,016</span><span class="dx-stat-cap">electric taxis, VAHAN, registered 2020 to 2026</span></div>
+  <div class="dx-stat"><span class="dx-stat-fig">98</span><span class="dx-stat-cap">confirmed four-wheeler charging sites in the study area</span></div>
+  <div class="dx-stat"><span class="dx-stat-fig">1,393 km²</span><span class="dx-stat-cap">study area, 250 wards</span></div>
+</div>
+</section><section class="g"><h2 class="h3">StepperSlider</h2><p class="dx-note">components/StepperSlider/README.md</p><div class="dx-pad"><div class="dx-stepper">
+  <label for="n">Number of stations <output for="n" id="o">104</output></label>
+  <input id="n" type="range" min="0" max="4" step="1" value="0" aria-valuetext="104 stations">
+  <div class="dx-ticks" aria-hidden="true"><span>104</span><span>157</span><span>178</span><span>206</span><span>404</span></div>
+</div></div>
+<script>
+var v=[104,157,178,206,404],n=document.getElementById('n'),o=document.getElementById('o');
+n.addEventListener('input',function(){o.textContent=v[n.value];n.setAttribute('aria-valuetext',v[n.value]+' stations');});
+</script>
+</section><section class="g"><h2 class="h3">TbdLabel</h2><p class="dx-note">components/TbdLabel/README.md</p><p class="dx-pad" style="margin:0;font-size:18px;line-height:29px">Final report: <span class="dx-tbd">[TBD: link]</span></p>
+</section><section class="g"><h2 class="h3">Toggle</h2><p class="dx-note">components/Toggle/README.md</p><div class="dx-col dx-pad" style="gap:0">
+  <label class="dx-toggle"><input type="checkbox" checked><span class="dx-box"></span>Demand layer</label>
+  <label class="dx-toggle"><input type="checkbox"><span class="dx-box"></span>Coverage rings</label>
+  <label class="dx-toggle"><input type="checkbox" checked><span class="dx-box"></span>Existing chargers</label>
+</div>
+</section><section class="g"><h2 class="h3">TopBar</h2><p class="dx-note">components/TopBar/README.md</p><a class="dx-skip" href="#explorer">Skip to the explorer</a>
+<header class="dx-topbar">
+  <a class="dx-brand" href="#">Delhi EV Charger Siting</a>
+  <nav class="dx-nav" aria-label="Sections">
+    <a href="#">Explorer</a><a href="#">Why chargers</a><a href="#">Demand</a><a href="#">Methods</a><a href="#">Scenarios</a><a href="#">Data &amp; limitations</a><a href="#">References &amp; team</a>
+  </nav>
+  <button class="dx-btn" type="button" aria-label="Switch to light theme">Light theme</button>
+</header>
+<p class="dx-note dx-pad">Three-dot mark goes left of the title once the file is supplied.</p>
+</section></div></body></html>

@@ -1,0 +1,66 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Delhi EV Charger Siting</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400&display=swap">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .band { position:absolute; top:0; left:0; width:960px; height:112px; }
+  .band svg { display:block; }
+  .blk { rx:var(--radius-panel); }
+  .d2 { fill:var(--demand-2); } .d4 { fill:var(--demand-4); } .d5 { fill:var(--demand-5); }
+  .acc { fill:var(--accent); } .cut { fill:var(--bg); }
+  .words { position:absolute; left:var(--space-24); right:var(--space-24); bottom:var(--space-24); }
+  .name { margin:0; font-family:var(--font-serif); font-weight:400; font-size:64px; line-height:.95; color:var(--ink); }
+  .tag { margin:var(--space-12) 0 0 2px; font-size:14px; line-height:20px; color:var(--ink-2); max-width:440px; }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="band">
+<svg viewBox="0 0 960 112" width="960" height="112" aria-hidden="true">
+<!--
+  blocks      demand-2 336x112 · demand-4 192x112 · accent 144x112 (the one charge-green) · demand-5 232x112, bleeding off the right; about 35% of 960x288
+  arrangement a strip of unequal bands across the top, space-16 gutters, like demand cells read along a row
+  pattern     station dots (r=6, the 12px dot) cut out in bg at a space-24 pitch over the demand bands; chosen because stations on demand cells are what this system draws
+  scales      gutters space-16; dot pitch space-24; block corners radius-panel
+-->
+<rect class="d2 blk" x="0" y="0" width="336" height="112"/>
+<rect class="d4 blk" x="352" y="0" width="192" height="112"/>
+<rect class="acc blk" x="560" y="0" width="144" height="112"/>
+<rect class="d5 blk" x="720" y="0" width="256" height="112"/>
+<circle class="cut" cx="24" cy="48" r="6"/>
+<circle class="cut" cx="24" cy="96" r="6"/>
+<circle class="cut" cx="48" cy="72" r="6"/>
+<circle class="cut" cx="72" cy="24" r="6"/>
+<circle class="cut" cx="72" cy="72" r="6"/>
+<circle class="cut" cx="72" cy="96" r="6"/>
+<circle class="cut" cx="96" cy="72" r="6"/>
+<circle class="cut" cx="144" cy="48" r="6"/>
+<circle class="cut" cx="168" cy="24" r="6"/>
+<circle class="cut" cx="168" cy="48" r="6"/>
+<circle class="cut" cx="192" cy="24" r="6"/>
+<circle class="cut" cx="216" cy="48" r="6"/>
+<circle class="cut" cx="216" cy="72" r="6"/>
+<circle class="cut" cx="216" cy="96" r="6"/>
+<circle class="cut" cx="312" cy="96" r="6"/>
+<circle class="cut" cx="360" cy="72" r="6"/>
+<circle class="cut" cx="384" cy="24" r="6"/>
+<circle class="cut" cx="456" cy="72" r="6"/>
+<circle class="cut" cx="504" cy="72" r="6"/>
+<circle class="cut" cx="528" cy="24" r="6"/>
+<circle class="cut" cx="528" cy="48" r="6"/>
+<circle class="cut" cx="528" cy="72" r="6"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Delhi EV Charger Siting</h1>
+<p class="tag">A night-time observatory of Delhi's charging network.</p>
+</div>
+</div>
+</body>
+</html>

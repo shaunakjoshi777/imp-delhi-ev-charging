@@ -1,0 +1,346 @@
+<title>Delhi Charger Siting Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: survey-sheet header with shared controls, a three-way comparison strip, then three map plates side by side (stacked on phones). */
+:root {
+  --paper: #f3f5f2;          /* map sheet */
+  --plate: #ffffff;          /* map plates */
+  --ink: #1b2320;            /* text */
+  --ink-2: #57625d;          /* secondary text */
+  --rule: #d5dbd6;           /* hairlines */
+  --demand: 27, 35, 32;      /* demand shading, as rgb for alpha ramps */
+  --outline: #1b2320;
+  --grid: #2f62c9;           /* method 1: policy grid */
+  --kmeans: #d9771f;         /* method 2: K-means */
+  --mclp: #23946b;           /* method 3: MCLP */
+  --existing: #c2255c;       /* existing 4W chargers */
+  --focus: #2f62c9;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121715; --plate: #1a201e; --ink: #e6ebe8; --ink-2: #9aa6a0; --rule: #2e3733;
+    --demand: 214, 226, 220; --outline: #c9d3ce;
+    --grid: #6f97ee; --kmeans: #f0a052; --mclp: #4cc496; --existing: #f06595; --focus: #6f97ee;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121715; --plate: #1a201e; --ink: #e6ebe8; --ink-2: #9aa6a0; --rule: #2e3733;
+  --demand: 214, 226, 220; --outline: #c9d3ce;
+  --grid: #6f97ee; --kmeans: #f0a052; --mclp: #4cc496; --existing: #f06595; --focus: #6f97ee;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+.wrap { max-width: 1440px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--font-head); font-weight: 600; font-size: clamp(22px, 3vw, 30px); line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+.lede { margin: 0; color: var(--ink-2); max-width: 78ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 12px 0; border-block: 1px solid var(--rule); }
+.ctl-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-family: var(--font-num); font-size: 12.5px; padding: 5px 10px; border: 0; background: var(--plate); color: var(--ink); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.check input { accent-color: var(--ink); width: 15px; height: 15px; margin: 0; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* comparison strip */
+.compare { overflow-x: auto; }
+.compare table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 560px; }
+.compare th, .compare td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.compare th:first-child, .compare td:first-child { text-align: left; }
+.compare thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-2); font-weight: 600; }
+.compare td { font-family: var(--font-num); font-size: 13.5px; }
+.compare td:first-child { font-family: var(--font-body); font-weight: 500; }
+.compare td.best { font-weight: 500; }
+.compare td.best::after { content: " ●"; font-size: 9px; vertical-align: 2px; color: var(--ink-2); }
+.mname { display: inline-flex; align-items: center; gap: 8px; }
+.cons-count { font-family: var(--font-num); font-size: 12.5px; color: var(--ink-2); }
+
+/* map plates */
+.plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 980px) { .plates { grid-template-columns: minmax(0, 1fr); } }
+.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 8px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.plate-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.plate h2 { margin: 0; font-family: var(--font-head); font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+.tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); }
+.plate p.how { margin: 0; color: var(--ink-2); font-size: 13px; }
+.slider-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.slider-row label { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.slider-row output { font-family: var(--font-num); font-size: 13px; min-width: 9.5ch; text-align: right; white-space: nowrap; }
+input[type="range"] { width: 100%; margin: 0; }
+input[type="range"]:disabled { opacity: 0.45; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1.02; max-width: 100%; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.stat { display: grid; gap: 1px; }
+.stat b { font-family: var(--font-num); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--ink-2); line-height: 1.3; }
+@media (max-width: 420px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; color: var(--ink-2); font-size: 12.5px; }
+.ramp { width: 90px; height: 9px; border-radius: 2px; border: 1px solid var(--rule); }
+footer { color: var(--ink-2); font-size: 12.5px; display: grid; gap: 6px; max-width: 110ch; }
+footer p { margin: 0; }
+.loading { color: var(--ink-2); padding: 40px 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Delhi Charger Siting Explorer</h1>
+    <p class="lede">Three ways to place public 4-wheeler EV charging stations across Delhi's 250 MCD wards. Change the grid size or the number of stations and each map redraws, with coverage recomputed against the same demand estimate.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Map options">
+    <span class="ctl-label">Coverage radius</span>
+    <div class="seg" id="radius-seg">
+      <button type="button" data-r="1500" aria-pressed="false">1.5 km</button>
+      <button type="button" data-r="2100" aria-pressed="true">2.1 km</button>
+      <button type="button" data-r="3000" aria-pressed="false">3 km</button>
+    </div>
+    <label class="check"><input type="checkbox" id="link-counts" checked> Same number of stations as the grid</label>
+    <label class="check"><input type="checkbox" id="show-rings"> Coverage rings</label>
+    <label class="check"><input type="checkbox" id="show-existing"> <span class="swatch" style="background:var(--existing)"></span> Existing 4W chargers (98)</label>
+    <label class="check"><input type="checkbox" id="show-consensus"> Consensus sites <span class="cons-count" id="cons-count"></span></label>
+  </div>
+
+  <section class="compare" aria-label="Side-by-side comparison">
+    <table>
+      <thead><tr><th>Method</th><th>Stations</th><th>Demand within R</th><th>Population within R</th><th>Area within R</th><th>Mean distance</th><th>Farthest cell</th></tr></thead>
+      <tbody id="compare-body"><tr><td colspan="7" class="loading">Loading layouts…</td></tr></tbody>
+    </table>
+  </section>
+
+  <section class="plates">
+    <article class="plate" id="plate-grid">
+      <div class="plate-head"><h2><span class="swatch" style="background:var(--grid)"></span>Grid</h2><span class="tag">Policy rule</span></div>
+      <p class="how">One station in every cell with at least 1% commercial or industrial land (Ministry of Power 3 km rule, ICCT method).</p>
+      <div class="slider-row"><label for="grid-size">Cell size</label><input type="range" id="grid-size" min="0" max="6" step="1" value="4"><output id="grid-out" for="grid-size">3 km</output></div>
+      <div class="canvas-box"><canvas id="map-grid" aria-label="Map of grid stations"></canvas></div>
+      <div class="stats" id="stats-grid"></div>
+    </article>
+    <article class="plate" id="plate-kmeans">
+      <div class="plate-head"><h2><span class="swatch" style="background:var(--kmeans)"></span>Weighted K-means</h2><span class="tag">Machine learning</span></div>
+      <p class="how">Groups demand into k clusters and puts a station at each cluster's demand-weighted centre. Minimises average distance.</p>
+      <div class="slider-row"><label for="k-slider">Stations</label><input type="range" id="k-slider" min="0" max="1" step="1" value="0"><output id="k-out" for="k-slider">104</output></div>
+      <div class="canvas-box"><canvas id="map-kmeans" aria-label="Map of K-means stations"></canvas></div>
+      <div class="stats" id="stats-kmeans"></div>
+    </article>
+    <article class="plate" id="plate-mclp">
+      <div class="plate-head"><h2><span class="swatch" style="background:var(--mclp)"></span>MCLP</h2><span class="tag">Optimisation</span></div>
+      <p class="how">Chooses p sites from the 1 km cell centres to maximise demand within 2.1 km. Once everything is covered, extra stations go closest to demand.</p>
+      <div class="slider-row"><label for="p-slider">Stations</label><input type="range" id="p-slider" min="0" max="1" step="1" value="0"><output id="p-out" for="p-slider">104</output></div>
+      <div class="canvas-box"><canvas id="map-mclp" aria-label="Map of MCLP stations"></canvas></div>
+      <div class="stats" id="stats-mclp"></div>
+    </article>
+  </section>
+
+  <div class="legend">
+    <span>Estimated demand</span><span class="ramp" id="ramp"></span><span>low → high</span>
+    <span><span class="swatch" style="background:var(--grid)"></span> grid</span>
+    <span><span class="swatch" style="background:var(--kmeans)"></span> K-means</span>
+    <span><span class="swatch" style="background:var(--mclp)"></span> MCLP</span>
+    <span><span class="swatch" style="background:var(--existing)"></span> existing 4W</span>
+    <span>◯ consensus site: all three methods have a station within 1 km, for the settings shown</span>
+  </div>
+
+  <footer>
+    <p>Demand: 1,570 one-km cells, weighted 60% by where people live (population, split by mapped residential land) and 40% by daytime destinations (offices, malls, hospitals, hotels, parking, commercial land, roads, metro and bus terminals). Weights sum to 1,000. Distances are straight-line in metres (UTM 43N); "farthest cell" is the worst-served cell.</p>
+    <p>Grid stations come from the 1% rule at each cell size. K-means and MCLP layouts are pre-computed for each station count shown; MCLP chooses from the 1,570 cell centres, so its 104-station layout here differs from the report's baseline, which uses the 206 grid-cell centres. For 60–140 stations the MCLP solver stopped at its time limit, so those layouts are near-optimal rather than proven optimal. Study area excludes NDMC and Delhi Cantonment.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const SIZES = ["1", "1.5", "2", "2.5", "3", "4", "5"];
+  const state = { radius: 2100, link: true, rings: false, existing: false, consensus: false, grid: 4, k: 0, p: 0, cons: [] };
+  let D = null, bounds = null;
+  const $ = (id) => document.getElementById(id);
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // ---------- metrics ----------
+  function metrics(st) {
+    const R = state.radius, R2 = R * R;
+    let wT = 0, wC = 0, pT = 0, pC = 0, aT = 0, aC = 0, dW = 0, dMax = 0;
+    for (const c of D.cells) {
+      const x = c[5], y = c[6];
+      let best = Infinity;
+      for (let j = 0; j < st.length; j++) { const dx = st[j][0] - x, dy = st[j][1] - y, q = dx * dx + dy * dy; if (q < best) best = q; }
+      const dist = Math.sqrt(best);
+      wT += c[2]; pT += c[3]; aT += c[4]; dW += c[2] * dist;
+      if (best <= R2) { wC += c[2]; pC += c[3]; aC += c[4]; }
+      if (dist > dMax) dMax = dist;
+    }
+    return { n: st.length, demand: 100 * wC / wT, pop: 100 * pC / pT, area: 100 * aC / aT, mean: dW / wT, max: dMax };
+  }
+
+  // ---------- drawing ----------
+  function setupCanvas(cv) {
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const pad = 6, W = r.width - 2 * pad, H = r.height - 2 * pad;
+    const s = Math.min(W / (bounds[2] - bounds[0]), H / (bounds[3] - bounds[1]));
+    const ox = pad + (W - s * (bounds[2] - bounds[0])) / 2, oy = pad + (H - s * (bounds[3] - bounds[1])) / 2;
+    return { ctx, s, X: (x) => ox + (x - bounds[0]) * s, Y: (y) => oy + (bounds[3] - y) * s, w: r.width, h: r.height };
+  }
+
+  function drawBase(m) {
+    const { ctx, s, X, Y } = m, rgb = css("--demand");
+    ctx.clearRect(0, 0, m.w, m.h);
+    const wmax = D.wmax;
+    for (const c of D.cells) {
+      const a = Math.min(1, Math.pow(c[2] / wmax, 0.6)) * 0.62 + 0.04;
+      ctx.fillStyle = `rgba(${rgb},${a.toFixed(3)})`;
+      ctx.fillRect(X(c[0] * 1000), Y((c[1] + 1) * 1000), 1000 * s + 0.4, 1000 * s + 0.4);
+    }
+    ctx.strokeStyle = css("--outline"); ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const ring of D.outline) { ring.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.closePath(); }
+    ctx.stroke();
+  }
+
+  function drawStations(m, st, color) {
+    const { ctx, s, X, Y } = m;
+    if (state.rings) {
+      ctx.fillStyle = color; ctx.globalAlpha = 0.07;
+      for (const p of st) { ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), state.radius * s, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
+    const r = st.length > 250 ? 2.2 : st.length > 150 ? 2.8 : 3.4;
+    ctx.fillStyle = color; ctx.strokeStyle = css("--plate"); ctx.lineWidth = 0.9;
+    for (const p of st) { ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), r, 0, 2 * Math.PI); ctx.fill(); ctx.stroke(); }
+  }
+
+  function drawOverlays(m) {
+    const { ctx, X, Y } = m;
+    if (state.existing) {
+      ctx.strokeStyle = css("--existing"); ctx.lineWidth = 1.4;
+      for (const p of D.existing4w) { const x = X(p[0]), y = Y(p[1]); ctx.beginPath(); ctx.moveTo(x - 3, y - 3); ctx.lineTo(x + 3, y + 3); ctx.moveTo(x + 3, y - 3); ctx.lineTo(x - 3, y + 3); ctx.stroke(); }
+    }
+    if (state.consensus) {
+      ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.8;
+      for (const c of state.cons) { ctx.beginPath(); ctx.arc(X(c[0]), Y(c[1]), 8, 0, 2 * Math.PI); ctx.stroke(); }
+    }
+  }
+
+  // A consensus site: a grid station with a K-means station AND an MCLP station within 1 km of it.
+  // Drawn at the mean position of the three stations. Recomputed whenever any slider changes.
+  const AGREE_M = 1000;
+  function nearest(st, x, y) {
+    let bi = -1, b = Infinity;
+    for (let j = 0; j < st.length; j++) { const dx = st[j][0] - x, dy = st[j][1] - y, q = dx * dx + dy * dy; if (q < b) { b = q; bi = j; } }
+    return [bi, Math.sqrt(b)];
+  }
+  function consensusSites(G, K, M) {
+    const out = [];
+    for (const g of G) {
+      const [ki, dk] = nearest(K, g[0], g[1]), [mi, dm] = nearest(M, g[0], g[1]);
+      if (dk <= AGREE_M && dm <= AGREE_M) out.push([(g[0] + K[ki][0] + M[mi][0]) / 3, (g[1] + K[ki][1] + M[mi][1]) / 3]);
+    }
+    return out;
+  }
+
+  function drawGridCells(m, g) {
+    const { ctx, s, X, Y } = m, size = g.size_km * 1000;
+    ctx.strokeStyle = css("--grid"); ctx.globalAlpha = 0.35; ctx.lineWidth = 0.7;
+    for (const c of g.cells) { if (c[2]) ctx.strokeRect(X(c[0]), Y(c[1] + size), size * s, size * s); }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- state -> view ----------
+  function nearestBudget(n) {
+    let bi = 0; D.budgets.forEach((b, i) => { if (Math.abs(b - n) < Math.abs(D.budgets[bi] - n)) bi = i; }); return bi;
+  }
+  const fmtPct = (v) => v.toFixed(1) + "%";
+  const fmtM = (v) => Math.round(v).toLocaleString("en-IN") + " m";
+
+  function statsHTML(mt) {
+    return `<div class="stat"><b>${fmtPct(mt.demand)}</b><span>demand within ${state.radius / 1000} km</span></div>
+            <div class="stat"><b>${fmtPct(mt.area)}</b><span>area within ${state.radius / 1000} km</span></div>
+            <div class="stat"><b>${fmtM(mt.mean)}</b><span>mean distance</span></div>
+            <div class="stat"><b>${fmtM(mt.max)}</b><span>farthest cell</span></div>`;
+  }
+
+  function render() {
+    const g = D.grids[SIZES[state.grid]];
+    if (state.link) { state.k = state.p = nearestBudget(g.n); }
+    $("grid-size").value = state.grid; $("k-slider").value = state.k; $("p-slider").value = state.p;
+    $("k-slider").disabled = $("p-slider").disabled = state.link;
+    const kN = D.budgets[state.k], pN = D.budgets[state.p];
+    $("grid-out").value = `${SIZES[state.grid]} km · ${g.n}`;
+    $("k-out").value = `${kN} stations`; $("p-out").value = `${pN} stations`;
+
+    const layouts = [
+      { key: "grid", name: "Grid", st: g.stations, color: css("--grid") },
+      { key: "kmeans", name: "Weighted K-means", st: D.kmeans[kN], color: css("--kmeans") },
+      { key: "mclp", name: "MCLP", st: D.mclp[pN], color: css("--mclp") },
+    ];
+    const ms = layouts.map((L) => metrics(L.st));
+    state.cons = consensusSites(layouts[0].st, layouts[1].st, layouts[2].st);
+    $("cons-count").textContent = `(${state.cons.length} of ${layouts[0].st.length} grid sites)`;
+    layouts.forEach((L, i) => {
+      const m = setupCanvas($("map-" + L.key));
+      drawBase(m);
+      if (L.key === "grid") drawGridCells(m, g);
+      drawStations(m, L.st, L.color);
+      drawOverlays(m);
+      $("stats-" + L.key).innerHTML = statsHTML(ms[i]);
+    });
+    const best = (f, hi) => { const v = ms.map(f); const b = hi ? Math.max(...v) : Math.min(...v); return v.map((x) => Math.abs(x - b) < 1e-9); };
+    const cols = [[(m) => m.demand, true, fmtPct], [(m) => m.pop, true, fmtPct], [(m) => m.area, true, fmtPct], [(m) => m.mean, false, fmtM], [(m) => m.max, false, fmtM]];
+    const flags = cols.map(([f, hi]) => best(f, hi));
+    $("compare-body").innerHTML = layouts.map((L, i) =>
+      `<tr><td><span class="mname"><span class="swatch" style="background:${L.color}"></span>${L.name}</span></td><td>${ms[i].n}</td>` +
+      cols.map(([f, , fmt], c) => `<td class="${flags[c][i] ? "best" : ""}">${fmt(f(ms[i]))}</td>`).join("") + `</tr>`).join("");
+    const rgb = css("--demand");
+    $("ramp").style.background = `linear-gradient(90deg, rgba(${rgb},0.05), rgba(${rgb},0.66))`;
+  }
+
+  // ---------- wiring ----------
+  function wire() {
+    $("k-slider").max = $("p-slider").max = D.budgets.length - 1;
+    $("grid-size").addEventListener("input", (e) => { state.grid = +e.target.value; render(); });
+    $("k-slider").addEventListener("input", (e) => { state.k = +e.target.value; render(); });
+    $("p-slider").addEventListener("input", (e) => { state.p = +e.target.value; render(); });
+    $("link-counts").addEventListener("change", (e) => { state.link = e.target.checked; render(); });
+    $("show-rings").addEventListener("change", (e) => { state.rings = e.target.checked; render(); });
+    $("show-existing").addEventListener("change", (e) => { state.existing = e.target.checked; render(); });
+    $("show-consensus").addEventListener("change", (e) => { state.consensus = e.target.checked; render(); });
+    document.querySelectorAll("#radius-seg button").forEach((b) => b.addEventListener("click", () => {
+      state.radius = +b.dataset.r;
+      document.querySelectorAll("#radius-seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      render();
+    }));
+    let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 80); });
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+    new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  }
+
+  fetch("explorer_data.json").then((r) => r.json()).then((data) => {
+    D = data;
+    D.wmax = Math.max(...D.cells.map((c) => c[2]));
+    const xs = [], ys = [];
+    D.outline.forEach((ring) => ring.forEach((p) => { xs.push(p[0]); ys.push(p[1]); }));
+    bounds = [Math.min(...xs) - 400, Math.min(...ys) - 400, Math.max(...xs) + 400, Math.max(...ys) + 400];
+    state.k = state.p = nearestBudget(104);
+    wire(); render();
+  }).catch(() => {
+    $("compare-body").innerHTML = '<tr><td colspan="7" class="loading">The layout data could not be loaded. Reload the page to try again.</td></tr>';
+  });
+})();
+</script>
