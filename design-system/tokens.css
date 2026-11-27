@@ -1,0 +1,86 @@
+/* Delhi EV Charger Siting: generated from tokens.json */
+@font-face { font-family: "Forum"; src: url("fonts/Forum-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+:root, [data-theme="dark"] {
+  --bg: #08140F;
+  --surface: #0F1F19;
+  --raised: #172C23;
+  --border: #274238;
+  --ink: #EAF4EE;
+  --ink-2: #A3BDB1;
+  --accent: #4ADE9A;
+  --on-accent: #06130D;
+  --tbd: #E6C36A;
+  --grid: #3987E5;
+  --kmeans: #C98500;
+  --mclp: #D55181;
+  --existing: #F0E6D2;
+  --consensus: var(--ink);
+  --demand-1: #1C211F;
+  --demand-2: #2E3431;
+  --demand-3: #464D4A;
+  --demand-4: #6B7370;
+  --demand-5: #A3AAA7;
+}
+[data-theme="light"] {
+  --bg: #F7F6F1;
+  --surface: #FFFFFF;
+  --raised: #ECEFE8;
+  --border: #D6DCD3;
+  --ink: #10231B;
+  --ink-2: #4A6056;
+  --accent: #0B6B47;
+  --on-accent: #FFFFFF;
+  --tbd: #7A5600;
+  --grid: #2A66C8;
+  --kmeans: #A85800;
+  --mclp: #9A3D92;
+  --existing: #3A3A36;
+  --consensus: var(--ink);
+  --demand-1: #EDEEEC;
+  --demand-2: #D5D8D5;
+  --demand-3: #B5BAB6;
+  --demand-4: #8C928E;
+  --demand-5: #5E6461;
+}
+:root {
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-72: 72px;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --reading-max: 720px;
+  --explorer-max: 1360px;
+  --topbar-height: 60px;
+  --touch-target: 44px;
+  --border-width: 1px;
+  --focus-ring-width: 2px;
+  --station-ring: 2px;
+  --method-rule: 3px;
+  --font-serif: Forum, Georgia, serif;
+  --font-sans: "Source Sans 3", system-ui, sans-serif;
+}
+.display { font-family: var(--font-serif); font-size: 56px; line-height: 62px; font-weight: 400; }
+.h2 { font-family: var(--font-serif); font-size: 34px; line-height: 42px; font-weight: 400; }
+.h3 { font-family: var(--font-serif); font-size: 22px; line-height: 28px; font-weight: 400; }
+.body { font-family: var(--font-sans); font-size: 18px; line-height: 29px; font-weight: 400; }
+.ui { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 500; }
+.caption { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
+.kicker { font-family: var(--font-sans); font-size: 13px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.figure { font-family: var(--font-sans); font-size: 44px; line-height: 48px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.display-phone { font-family: var(--font-serif); font-size: 36px; line-height: 42px; font-weight: 400; }
+.h2-phone { font-family: var(--font-serif); font-size: 28px; line-height: 34px; font-weight: 600; }
+.h3-phone { font-family: var(--font-serif); font-size: 20px; line-height: 26px; font-weight: 600; }
+.body-phone { font-family: var(--font-sans); font-size: 17px; line-height: 27px; font-weight: 400; }
+.figure-phone { font-family: var(--font-sans); font-size: 32px; line-height: 36px; font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) {
+  .display { font-size: 36px; line-height: 42px; }
+  .h2 { font-size: 28px; line-height: 34px; }
+  .h3 { font-size: 20px; line-height: 26px; }
+  .body { font-size: 17px; line-height: 27px; }
+  .figure { font-size: 32px; line-height: 36px; }
+}
