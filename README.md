@@ -1,78 +1,53 @@
-# Delhi EV Charger Siting: project website
+# Delhi EV Charger Siting: website
 
-Static one-page site for *A Comparative Analysis of Algorithms to Optimise EV Charging Station Locations in NCT Delhi*
-(Interdisciplinary Major Project, FLAME University). It shows three siting methods (a policy grid rule, weighted
-K-means and MCLP) side by side on the same demand estimate, with the Delhi Charger Siting Explorer as its centrepiece.
+A one-page site for the FLAME University Interdisciplinary Major Project on where public electric-car chargers could go in Delhi. It shows proposed sites from three siting methods (grid rule, weighted K-means, MCLP). It never says which method is better.
 
-Live site: <https://shaunakjoshi777.github.io/imp-delhi-ev-charging/>
+## See it on your computer
 
-Plain HTML, CSS and JavaScript. No build step, no backend, no API keys.
+The page loads its data with `fetch`, so it needs a small local server. Opening `index.html` by double-clicking will not show the maps.
 
-## Files
-
-| File | What it is |
-|---|---|
-| `index.html` | The page |
-| `assets/site.css` | Styles (light and dark themes) |
-| `assets/explorer.js` | Theme toggle, KaTeX formulas, the demand map and the explorer |
-| `explorer_data.json` | Every layout the explorer draws (about 320 KB) |
-| `site_facts.json` | The counts quoted in the page text, read from the project data |
-| `build_data.py` | Rebuilds the two JSON files from the project data |
-| `precompute_layouts.py` | The team's original export script (kept for reference; `build_data.py` follows it) |
-| `NOTES.md` | Assumptions, open questions, placeholders and differences from the report |
-
-External resources, loaded from CDNs: IBM Plex fonts (Google Fonts, with system-font fallbacks) and KaTeX 0.16.11
-(jsDelivr). If they fail to load, the page still works: text falls back to system fonts and formulas show as plain text.
-
-## Preview locally
-
-From this folder:
-
-```bash
+```
+cd path/to/this/folder
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000>. Opening `index.html` directly from disk won't work, because the page fetches
-`explorer_data.json`.
+Then open http://localhost:8000 in your browser. Press Ctrl+C in Terminal to stop the server.
 
-## Rebuild the data
+## What is in this folder
 
-`build_data.py` needs the full project folder, which isn't in this repository: `siting_lib.py` and `imp 2/` (with
-`Final Data/`, `data/delhi_demand_weights.gpkg`, `outputs/siting_all_layouts_v1.gpkg` and `ward_master_v2.csv`) next
-to the `website/` folder. It needs Python 3.11+ with geopandas, shapely 2, scikit-learn and SciPy.
+- `index.html`: all page text, in the order of the design brief.
+- `assets/site.css`: page layout. Colours, type, spacing and corners come only from the design system.
+- `assets/explorer.js`: the explorer. It draws saved layouts and works out distances; it never moves a station.
+- `data/explorer_data.json`: every station, demand square, existing charger and shared site the page shows.
+- `design-system/`: tokens (`tokens.css`), component styles (`components/bundle.css`), the Forum font and the Delhi outline logo. `design-system/README.md` has the rules.
+- `tools/`: how the data file was made (see below).
+- `assets/vendor/katex/`: KaTeX 0.16.11 for the two formulas, and `design-system/fonts/` holds Forum and Source Sans 3, so the site needs no outside servers.
 
-Run from the project folder:
+## Where the data comes from
 
-```bash
-python3 website/build_data.py --facts-only
+Everything comes from `ev_siting_final.ipynb` (the team's final notebook).
+
+1. `tools/run_nb.py` (with `tools/cells.json`, the code of the notebook cells it runs) runs the notebook's model cells unchanged (demand load, grid, K-means, MCLP, Scenario B, station-number runs, Monte Carlo and shared sites). It skips the cells the site does not use: rebuilding demand from OpenStreetMap, road distances, set cover, demand-surface and capacity checks, and the extensions.
+2. `tools/export_site_data.py` turns those results into `data/explorer_data.json`, adding ward names and latitude/longitude.
+
+To rebuild, put both scripts in the project folder (next to `Final Data/` and `data/`) and run:
+
+```
+python3 run_nb.py
+python3 export_site_data.py data/explorer_data.json
 ```
 
-```bash
-python3 website/build_data.py
-```
+MCLP runs with a time limit (the 1,570-site runs), so a rerun on another machine can give slightly different sites for those settings.
 
-```bash
-python3 website/build_data.py --resolve-mclp
-```
+## Put it on GitHub Pages
 
-- `--facts-only` rewrites `site_facts.json` only (a few seconds).
-- With no flag it also rebuilds the grid and K-means layouts, the demand cells and the outline, and keeps the existing
-  MCLP layouts.
-- `--resolve-mclp` also re-solves MCLP for every station count (up to 90 s per stage for 28 station counts, so it can take over an hour). Check the
-  result before publishing: with a time limit, a re-solve on a different machine can return a worse layout (see
-  `NOTES.md`, item 7).
+1. Copy everything in this folder to the root of the repository (keep the folder structure).
+2. Commit and push to a branch, then open a pull request into `main`.
+3. In the repository, go to Settings → Pages and choose "Deploy from a branch", branch `main`, folder `/ (root)`.
+4. A minute or two after merging, the site is live at `https://<user>.github.io/<repo>/`.
 
-The demand surface itself isn't rebuilt by this script. It comes from `imp 2/demand_weights.ipynb`, which writes into
-`imp 2/data/`; run it on a copy if it ever needs re-running.
+## Rules the site keeps
 
-## Deploy on GitHub Pages
-
-1. Push this folder to the repository's `main` branch (it's the repository root).
-2. On GitHub, open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, branch `main`,
-   folder `/ (root)`, and save.
-3. After a minute or two the site is at `https://<user>.github.io/<repository>/`.
-
-The `.nojekyll` file tells GitHub Pages to serve the files as they are.
-
-To deploy on Netlify instead, drag this folder onto <https://app.netlify.com/drop>, or connect the repository with no
-build command and `.` as the publish directory.
+- No ranking, scoring, highlighting or sorting of methods. Figures show one method at a time.
+- No invented stations, numbers or place names. Missing values show as `[TBD: ...]`.
+- Keep the OpenStreetMap attribution.
